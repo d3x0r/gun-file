@@ -1,0 +1,21 @@
+{
+  "name": "gun-file",
+  "version": "1.0.0",
+  "description": "Streaming JSON file driver for Gun.",
+  "main": "file.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "github:d3x0r/gun-file",
+  "keywords": [
+    "gun",
+    "gundb",
+    "file",
+    "database",
+    "json",
+    "json6"
+  ],
+  "author": "d3x0r",
+  "license": "ISC",
+  "dependencies": [ "json-6", "async", "gun" ]
+}
