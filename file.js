@@ -3,35 +3,12 @@
 // twas not designed for production use
 // only simple local development.
 
-const Gun = require('../gun');
+const Gun = require('gun/gun');
 const json6 = require( 'json-6' );
 const fs = require('fs');
 const async = require('async');
 
 
-function preloadDisk( opt, disk ) {
-	fs.open( opt['file-name'], "r", opt['file-mode'], function(err,fd) {
-		if( err ) { if( err.code !== "ENOENT" ) Gun.log( 'file-error', err ) }
-		else {
-			var parser = json6.begin( function(val) {
-				disk[val[0]] = val[1];
-			} );
-			var buf = new Buffer( 4096 );
-			function loop() {
-				fs.read( fd, buf, 0, 4096, null/*read from curpos*/, function( err, bytesRead, buffer ) {
-					if( !bytesRead ) {
-						fs.close(fd);
-						Gun.obj.ify( disk );
-					} else {
-						parser.add( buf.toString('utf8',0,bytesRead) );
-						loop();
-					}
-				} );
-			}
-			loop();
-		}
-	} );
-}
 
 Gun.on('opt', function(ctx){
 	this.to.next(ctx);
@@ -40,13 +17,16 @@ Gun.on('opt', function(ctx){
 	opt['file-name'] = String(opt['file-name'] || 'data.json');
 	opt['file-mask'] = String(opt['file-mask'] || 0666);
 	opt['file-pretty'] = String(opt['file-pretty'] || true);
+	opt['file-delay'] = String(opt['file-delay'] || 100 );
 	var graph = ctx.graph, acks = {}, count = 0, to;
 	var disk = {};
+	var reading = false;
+	var wantFlush = true;
 	preloadDisk(opt, disk);
 
 	Gun.log.once(
 		'file-warning',
-		'WARNING! This `gun-file` pre-alpha module for gun for development testing only!'
+		'WARNING! This `gun-file` pre-alpha module for gun for testing only!'
 	);
 	
 	ctx.on('put', function(at){
@@ -58,7 +38,7 @@ Gun.on('opt', function(ctx){
 			return flush();
 		}
 		if(to){ return }
-		to = setTimeout(flush, opt.wait || 1);
+		to = setTimeout(flush, opt['file-delay'] );
 	});
 
 	ctx.on('get', function(at){
@@ -80,22 +60,57 @@ Gun.on('opt', function(ctx){
 		disk[soul] = Gun.state.to(node, key, disk[soul]);
 	}
 
+
+	function preloadDisk( opt, disk ) {
+		reading = true;
+		const stream = fs.createReadStream( opt['file-name'], { flags:"r", encoding:"utf8"} );
+		const parser = json6.begin( function(val) {
+			console.log( "Recover:", val );
+			disk[val[0]] = val[1];
+		} );
+		stream.on('open', function() {
+			console.log( "Read stream opened.." );
+			//process.exit();
+		} );
+		stream.on('error', function( err ){ 
+			console.log( "READ STREAM ERROR:", err );
+		} );
+ 	 	stream.on('data', function(chunk) {
+			parser.add( chunk );
+		});
+		stream.on( "close", function(){ 
+			console.log( "clear reading..." );
+			reading = false;
+			console.log( "File done" );
+			Gun.obj.ify( disk );
+			if(to){ return }
+			to = setTimeout(flush, opt['file-delay'] );
+		} );
+		console.log("Reading is still:", reading );
+	}
+
 	var wait;
 	var flush = function(){
+		if(reading) { console.log( "Still reading." ); return }
 		if(wait){ return }
+		console.log( "Flush called first?", reading );
 		clearTimeout(to);
 		to = false;
 		var ack = acks;
 		acks = {};
 		wait = true;
 		var pretty = opt['file-pretty']?3:null;
-		var stream = fs.createWriteStream( opt['file-name'], {encoding:'utf8', mode:opt['file-mode'], flags:"w"} );
+		var stream = fs.createWriteStream( opt['file-name'], {encoding:'utf8', mode:opt['file-mode'], flags:"w+"} );
+		var waitDrain = false;
 		stream.on('open', function () {
 			async.forEachOf( disk, function(item,key,next) {
-				if( !stream.write( JSON.stringify( [key, disk[key]], pretty ), 'utf8', function() {
-					next();
+				console.log( "output : ", key );
+				var out = JSON.stringify( [key, disk[key]], null, pretty ) + (pretty?"\n":"");
+				if( !stream.write( out, 'utf8', function() {
+					if( !waitDrain ) next();
 				} ) ) {
 					// wait for on_something before next write.
+					waitDrain = true;
 					stream.once('drain', next );
 				}
 			}, function(err){
