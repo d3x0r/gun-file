@@ -17,8 +17,18 @@ root.not( ()=>{
 	root.set( { field: "randomkey" } );
 } );
 
+var count = 0;
+
+function showItems() {
+	console.log( "Got", count, "items" );
+}
+var timeout;
 root.map( (field,val)=>{ 
-	console.log( "Got:", val, field ) 
+	count++;
+	if( timeout )
+		clearTimeout( timeout );
+	timeout = setTimeout( showItems, 100 );
+	//console.log( "Got:", val, field ) 
 	if( val == "hello" ) {
 		for( var n = 0; n < 500; n++ )
 			root.set( { field: "randomkey" } );
