@@ -21,6 +21,8 @@ Gun.on('opt', function(ctx){
 	var graph = ctx.graph, acks = {}, count = 0, to;
 	var disk = {};
 	var reading = false;
+	var pending = [];
+	var pend = null;
 	var wantFlush = true;
 	preloadDisk(opt, disk);
 
@@ -37,6 +39,7 @@ Gun.on('opt', function(ctx){
 		if(count >= (opt.batch || 10000)){
 			return flush();
 		}
+		//console.log( "put happened?" );
 		if(to){ return }
 		to = setTimeout(flush, opt['file-delay'] );
 	});
@@ -48,11 +51,16 @@ Gun.on('opt', function(ctx){
 		if(!lex || !(soul = lex[Gun._.soul])){ return }
 		//if(0 >= at.cap){ return }
 		var field = lex['.'];
-		data = disk[soul] || u;
-		if(data && field){
-			data = Gun.state.to(data, field);
+
+		if( reading )	
+			pending.push( {gun:gun, soul:soul, at:at, u:u, field:field} );
+		else {
+			data = disk[soul] || u;
+			if(data && field){
+				data = Gun.state.to(data, field);
+			}
+			gun.on('in', {'@': at['#'], put: Gun.graph.node(data)});
 		}
-		gun.on('in', {'@': at['#'], put: Gun.graph.node(data)});
 		//},11);
 	});
 
@@ -63,6 +71,7 @@ Gun.on('opt', function(ctx){
 
 	function preloadDisk( opt, disk ) {
 		reading = true;
+		//console.log( "preload happened." );
 		const stream = fs.createReadStream( opt['file-name'], { flags:"r", encoding:"utf8"} );
 		const parser = json6.begin( function(val) {
 			//console.log( "Recover:", val );
@@ -70,19 +79,26 @@ Gun.on('opt', function(ctx){
 		} );
 		stream.on('open', function() {
 			//console.log( "Read stream opened.." );
-			//process.exit();
 		} );
 		stream.on('error', function( err ){ 
 			//console.log( "READ STREAM ERROR:", err );
 		} );
  	 	stream.on('data', function(chunk) {
+			//console.log( "got stream data" );
 			parser.add( chunk );
 		});
 		stream.on( "close", function(){ 
-			//console.log( "clear reading..." );
+			//console.log( "reading done..." );
 			reading = false;
 			//console.log( "File done" );
-			Gun.obj.ify( disk );
+			var pend;
+			while( pend = pending.shift() ) {
+				var data = disk[pend.soul] || pend.u;
+				if(data && pend.field){
+					data = Gun.state.to(data, pend.field);
+				}
+				pend.gun.on('in', {'@': pend.at['#'], put: Gun.graph.node(data)});
+			}
 			if( wantFlush ) {
 				if(to){ return }
 				to = setTimeout(flush, opt['file-delay'] );
