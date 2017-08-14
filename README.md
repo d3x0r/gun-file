@@ -18,5 +18,14 @@ A streaming file extension for Gun.
 To avoid conflict with Gun's builtin file driver, you will have to use ```require('gun/gun')``` plus any other modules you want to use.
 The option ```file:null``` should work in gun to disable the builtin driver, but at this point does not.
 
+```
+var Gun = require( "gun/gun" );
+require( 'gun-file' );
+```
 
 
+
+### Changelog
+
+1.0.1 - update to JSON6 library rename of 'add' to 'write'
+1.0.0 - Initial release

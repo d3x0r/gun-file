@@ -103,7 +103,7 @@ Gun.on('opt', function(ctx){
 		} );
  	 	stream.on('data', function(chunk) {
 			_json_debug && console.log( "got stream data",chunk );
-			parser.add( chunk );
+			parser.write( chunk );
 		});
 		stream.on( "close", function(){ 
 			_debug && console.log( "reading done..." );
