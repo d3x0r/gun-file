@@ -23,7 +23,7 @@ Gun.on('opt', function(ctx){
 	var reading = false;
 	var pending = [];
 	var pend = null;
-	var wantFlush = true;
+	var wantFlush = false;
 	preloadDisk(opt, disk);
 
 	Gun.log.once(
@@ -31,10 +31,22 @@ Gun.on('opt', function(ctx){
 		'WARNING! This `gun-file` pre-alpha module for gun for testing only!'
 	);
 	
+	var skip_put;
 	ctx.on('put', function(at){
 		this.to.next(at);
 		Gun.graph.is(at.put, null, map);
+		if( skip_put == at['@'] ) { 
+			//console.log( "skipping put in-get", at ); 
+			return; 
+		}
 		if(!at['@']){ acks[at['#']] = true; } // only ack non-acks.
+		else if( pend && at['@'] == pend.at['#'] ) {
+			//console.log( "Prevent self flush" ); 
+			return;
+		}
+		//console.log( "WILL FLUSH WITH at:", at );
+		//console.log( "pend:", pend );
+		//console.log( "skip:", skip_put );
 		count += 1;
 		if(count >= (opt.batch || 10000)){
 			return flush();
@@ -59,7 +71,9 @@ Gun.on('opt', function(ctx){
 			if(data && field){
 				data = Gun.state.to(data, field);
 			}
+			skip_put = at['#'];
 			gun.on('in', {'@': at['#'], put: Gun.graph.node(data)});
+			skip_put = null;
 		}
 		//},11);
 	});
@@ -91,15 +105,16 @@ Gun.on('opt', function(ctx){
 			//console.log( "reading done..." );
 			reading = false;
 			//console.log( "File done" );
-			var pend;
 			while( pend = pending.shift() ) {
 				var data = disk[pend.soul] || pend.u;
 				if(data && pend.field){
 					data = Gun.state.to(data, pend.field);
 				}
+				//console.log( "Sending pending response..." );
 				pend.gun.on('in', {'@': pend.at['#'], put: Gun.graph.node(data)});
 			}
 			if( wantFlush ) {
+				console.log( "WANTED FLUSH during READ?" );
 				if(to){ return }
 				to = setTimeout(flush, opt['file-delay'] );
 			}
@@ -119,6 +134,7 @@ Gun.on('opt', function(ctx){
 		var pretty = opt['file-pretty']?3:null;
 		var stream = fs.createWriteStream( opt['file-name'], {encoding:'utf8', mode:opt['file-mode'], flags:"w+"} );
 		var waitDrain = false;
+		//console.log( "DOING FLUSH" );
 		stream.on('open', function () {
 			async.forEachOf( disk, function(item,key,next) {
 				//console.log( "output : ", key );
