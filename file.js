@@ -6,7 +6,6 @@
 const Gun = require('gun/gun');
 const json6 = require( 'json-6' );
 const fs = require('fs');
-const async = require('async');
 const _debug = false;
 
 

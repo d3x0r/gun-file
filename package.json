@@ -20,5 +20,5 @@
   ],
   "author": "d3x0r",
   "license": "ISC",
-  "dependencies": [ "json-6", "async", "gun" ]
+  "dependencies": [ "json-6", "gun" ]
 }
