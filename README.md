@@ -5,12 +5,18 @@ A streaming file extension for Gun.
 ## Controlling Options
 
 ```
-	var gun = new Gun( { 'file-name' : 'yourData.json',
-                             'file-mask' : 0666, // default
+	var gun = new Gun( { 'file-name' : 'yourData.json',  // default is 'data.json'
+                             'file-mask' : 0666, // default is 0666
                              'file-pretty' : true, // default, if false, will write ugly/compressed json
-                             'file-delay' : 100,  // control flush interval/delay
+                             'file-delay' : 100,  // default. control flush interval/delay default.
                            } );
 
 ```
+
+## Important
+
+To avoid conflict with Gun's builtin file driver, you will have to use ```require('gun/gun')``` plus any other modules you want to use.
+The option ```file:null``` should work in gun to disable the builtin driver, but at this point does not.
+
 
 
