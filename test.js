@@ -17,6 +17,12 @@ root.not( ()=>{
 	root.set( { field: "randomkey" } );
 } );
 
-root.map( (field,val)=>{ console.log( "Got:", val, field ) } )
+root.map( (field,val)=>{ 
+	console.log( "Got:", val, field ) 
+	if( val == "hello" ) {
+		for( var n = 0; n < 500; n++ )
+			root.set( { field: "randomkey" } );
+	}
+} )
 
 

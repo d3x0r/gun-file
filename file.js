@@ -7,7 +7,7 @@ const Gun = require('gun/gun');
 const json6 = require( 'json-6' );
 const fs = require('fs');
 const async = require('async');
-
+const _debug = false;
 
 
 Gun.on('opt', function(ctx){
@@ -34,14 +34,16 @@ Gun.on('opt', function(ctx){
 	var skip_put;
 	ctx.on('put', function(at){
 		this.to.next(at);
+		_debug && console.log( "So this should be updating db?", skip_put, pend );
 		Gun.graph.is(at.put, null, map);
-		if( skip_put == at['@'] ) { 
-			//console.log( "skipping put in-get", at ); 
+
+		if( skip_put && skip_put == at['@'] ) { 
+			_debug && console.log( "skipping put in-get", skip_put, at['@'] ); 
 			return; 
 		}
 		if(!at['@']){ acks[at['#']] = true; } // only ack non-acks.
 		else if( pend && at['@'] == pend.at['#'] ) {
-			//console.log( "Prevent self flush" ); 
+			_debug && console.log( "Prevent self flush", pend ); 
 			return;
 		}
 		//console.log( "WILL FLUSH WITH at:", at );
@@ -51,7 +53,7 @@ Gun.on('opt', function(ctx){
 		if(count >= (opt.batch || 10000)){
 			return flush();
 		}
-		//console.log( "put happened?" );
+		_debug && console.log( "put happened?", to );
 		if(to){ return }
 		to = setTimeout(flush, opt['file-delay'] );
 	});
@@ -59,14 +61,13 @@ Gun.on('opt', function(ctx){
 	ctx.on('get', function(at){
 		this.to.next(at);
 		var gun = at.gun, lex = at.get, soul, data, opt, u;
-		//setTimeout(function(){
 		if(!lex || !(soul = lex[Gun._.soul])){ return }
-		//if(0 >= at.cap){ return }
 		var field = lex['.'];
 
 		if( reading )	
 			pending.push( {gun:gun, soul:soul, at:at, u:u, field:field} );
 		else {
+			_debug && console.log( "getting data:", soul );
 			data = disk[soul] || u;
 			if(data && field){
 				data = Gun.state.to(data, field);
@@ -79,6 +80,7 @@ Gun.on('opt', function(ctx){
 	});
 
 	var map = function(val, key, node, soul){
+		_debug && console.log( "mapping graph?", soul );
 		disk[soul] = Gun.state.to(node, key, disk[soul]);
 	}
 
@@ -95,14 +97,16 @@ Gun.on('opt', function(ctx){
 			//console.log( "Read stream opened.." );
 		} );
 		stream.on('error', function( err ){ 
-			//console.log( "READ STREAM ERROR:", err );
+			if( err.code !== 'ENOENT' )
+				console.log( "READ STREAM ERROR:", err );
+			reading = false;
 		} );
  	 	stream.on('data', function(chunk) {
 			//console.log( "got stream data" );
 			parser.add( chunk );
 		});
 		stream.on( "close", function(){ 
-			//console.log( "reading done..." );
+			_debug && console.log( "reading done..." );
 			reading = false;
 			//console.log( "File done" );
 			while( pend = pending.shift() ) {
@@ -114,7 +118,7 @@ Gun.on('opt', function(ctx){
 				pend.gun.on('in', {'@': pend.at['#'], put: Gun.graph.node(data)});
 			}
 			if( wantFlush ) {
-				console.log( "WANTED FLUSH during READ?" );
+				_debug && console.log( "WANTED FLUSH during READ?", to );
 				if(to){ return }
 				to = setTimeout(flush, opt['file-delay'] );
 			}
@@ -124,7 +128,8 @@ Gun.on('opt', function(ctx){
 
 	var wait;
 	var flush = function(){
-		if(reading) { wantFlush = true; return }
+		_debug && console.log( "DOING FLUSH", reading, wait, count );
+		if(reading) { wantFlush = true; return; }
 		if(wait){ return }
 		clearTimeout(to);
 		to = false;
@@ -134,33 +139,44 @@ Gun.on('opt', function(ctx){
 		var pretty = opt['file-pretty']?3:null;
 		var stream = fs.createWriteStream( opt['file-name'], {encoding:'utf8', mode:opt['file-mode'], flags:"w+"} );
 		var waitDrain = false;
-		//console.log( "DOING FLUSH" );
 		stream.on('open', function () {
-			async.forEachOf( disk, function(item,key,next) {
-				//console.log( "output : ", key );
+			var keys = Object.keys( disk );
+			var n = 0;
+			
+			function writeOne() {
+				if( n >= keys.length ) {
+					_debug && console.log( "done; close stream." );
+					stream.end();
+					wait = false;
+					//var tmp = count;
+					count = 0;
+					Gun.obj.map(ack, function(yes, id){
+						ctx.on('in', {
+							'@': id,
+							err: false,
+							ok: 1
+						});
+					});
+					//if(1 < tmp){ flush() }
+					return;				        
+				}
+				var key = keys[n++];
 				var out = JSON.stringify( [key, disk[key]], null, pretty ) + (pretty?"\n":"");
 				if( !stream.write( out, 'utf8', function() {
-					if( !waitDrain ) next();
+					if( !waitDrain ){ writeOne(); }
+					else { _debug && console.log( "Skipped doing next?" ); }
 				} ) ) {
 					// wait for on_something before next write.
 					waitDrain = true;
-					stream.once('drain', next );
-				}
-			}, function(err){
-				stream.end();
-				if( err ) throw new Error( err );
-				wait = false;
-				var tmp = count;
-				count = 0;
-				Gun.obj.map(ack, function(yes, id){
-					ctx.on('in', {
-						'@': id,
-						err: err,
-						ok: 1
+					_debug && console.log( "wait DRAIN" );
+					stream.once('drain', function(){ 
+						_debug && console.log( "Continue after drain happened." );
+						waitDrain = false;
+						writeOne()
 					});
-				});
-				if(1 < tmp){ flush() }
-			} );
+				}
+			}
+			writeOne();
 		} );
 
 	}
