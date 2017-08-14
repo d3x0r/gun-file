@@ -65,35 +65,36 @@ Gun.on('opt', function(ctx){
 		reading = true;
 		const stream = fs.createReadStream( opt['file-name'], { flags:"r", encoding:"utf8"} );
 		const parser = json6.begin( function(val) {
-			console.log( "Recover:", val );
+			//console.log( "Recover:", val );
 			disk[val[0]] = val[1];
 		} );
 		stream.on('open', function() {
-			console.log( "Read stream opened.." );
+			//console.log( "Read stream opened.." );
 			//process.exit();
 		} );
 		stream.on('error', function( err ){ 
-			console.log( "READ STREAM ERROR:", err );
+			//console.log( "READ STREAM ERROR:", err );
 		} );
  	 	stream.on('data', function(chunk) {
 			parser.add( chunk );
 		});
 		stream.on( "close", function(){ 
-			console.log( "clear reading..." );
+			//console.log( "clear reading..." );
 			reading = false;
-			console.log( "File done" );
+			//console.log( "File done" );
 			Gun.obj.ify( disk );
-			if(to){ return }
-			to = setTimeout(flush, opt['file-delay'] );
+			if( wantFlush ) {
+				if(to){ return }
+				to = setTimeout(flush, opt['file-delay'] );
+			}
 		} );
-		console.log("Reading is still:", reading );
+
 	}
 
 	var wait;
 	var flush = function(){
-		if(reading) { console.log( "Still reading." ); return }
+		if(reading) { wantFlush = true; return }
 		if(wait){ return }
-		console.log( "Flush called first?", reading );
 		clearTimeout(to);
 		to = false;
 		var ack = acks;
@@ -104,7 +105,7 @@ Gun.on('opt', function(ctx){
 		var waitDrain = false;
 		stream.on('open', function () {
 			async.forEachOf( disk, function(item,key,next) {
-				console.log( "output : ", key );
+				//console.log( "output : ", key );
 				var out = JSON.stringify( [key, disk[key]], null, pretty ) + (pretty?"\n":"");
 				if( !stream.write( out, 'utf8', function() {
 					if( !waitDrain ) next();
