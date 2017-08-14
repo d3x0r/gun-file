@@ -18,19 +18,24 @@ root.not( ()=>{
 } );
 
 var count = 0;
-
+var start = Date.now();
+var first = false;
 function showItems() {
 	console.log( "Got", count, "items" );
 }
 var timeout;
 root.map( (field,val)=>{ 
+	if( !first ) {
+		console.log( "first map in ", Date.now() - start );
+		first = true;
+	}
 	count++;
 	if( timeout )
 		clearTimeout( timeout );
 	timeout = setTimeout( showItems, 100 );
 	//console.log( "Got:", val, field ) 
 	if( val == "hello" ) {
-		for( var n = 0; n < 500; n++ )
+		for( var n = 0; n < 10000; n++ )
 			root.set( { field: "randomkey" } );
 	}
 } )

@@ -7,7 +7,8 @@ const Gun = require('gun/gun');
 const json6 = require( 'json-6' );
 const fs = require('fs');
 const _debug = false;
-
+const _json_debug = false;
+const _debug_write_time = false;
 
 Gun.on('opt', function(ctx){
 	this.to.next(ctx);
@@ -53,7 +54,7 @@ Gun.on('opt', function(ctx){
 			return flush();
 		}
 		_debug && console.log( "put happened?", to );
-		if(to){ return }
+		if(to) clearTimeout( to );
 		to = setTimeout(flush, opt['file-delay'] );
 	});
 
@@ -89,7 +90,7 @@ Gun.on('opt', function(ctx){
 		//console.log( "preload happened." );
 		const stream = fs.createReadStream( opt['file-name'], { flags:"r", encoding:"utf8"} );
 		const parser = json6.begin( function(val) {
-			//console.log( "Recover:", val );
+			_json_debug && console.log( "Recover:", val );
 			disk[val[0]] = val[1];
 		} );
 		stream.on('open', function() {
@@ -101,7 +102,7 @@ Gun.on('opt', function(ctx){
 			reading = false;
 		} );
  	 	stream.on('data', function(chunk) {
-			//console.log( "got stream data" );
+			_json_debug && console.log( "got stream data",chunk );
 			parser.add( chunk );
 		});
 		stream.on( "close", function(){ 
@@ -118,7 +119,7 @@ Gun.on('opt', function(ctx){
 			}
 			if( wantFlush ) {
 				_debug && console.log( "WANTED FLUSH during READ?", to );
-				if(to){ return }
+				if(to) clearTimeout( to );
 				to = setTimeout(flush, opt['file-delay'] );
 			}
 		} );
@@ -126,6 +127,7 @@ Gun.on('opt', function(ctx){
 	}
 
 	var wait;
+	var startWrite;
 	var flush = function(){
 		_debug && console.log( "DOING FLUSH", reading, wait, count );
 		if(reading) { wantFlush = true; return; }
@@ -141,12 +143,14 @@ Gun.on('opt', function(ctx){
 		stream.on('open', function () {
 			var keys = Object.keys( disk );
 			var n = 0;
+			if( _debug_write_time ) startWrite = Date.now();
 			
 			function writeOne() {
 				if( n >= keys.length ) {
+					wait = false;
+					_debug_write_time && console.log( "Write to file:", Date.now() - startWrite );
 					_debug && console.log( "done; close stream." );
 					stream.end();
-					wait = false;
 					//var tmp = count;
 					count = 0;
 					Gun.obj.map(ack, function(yes, id){
@@ -162,7 +166,9 @@ Gun.on('opt', function(ctx){
 				var key = keys[n++];
 				var out = JSON.stringify( [key, disk[key]], null, pretty ) + (pretty?"\n":"");
 				if( !stream.write( out, 'utf8', function() {
-					if( !waitDrain ){ writeOne(); }
+					if( !waitDrain ){ 
+						if( wait ) writeOne();  // otherwise already completed writing everything.
+					}
 					else { _debug && console.log( "Skipped doing next?" ); }
 				} ) ) {
 					// wait for on_something before next write.
@@ -170,8 +176,12 @@ Gun.on('opt', function(ctx){
 					_debug && console.log( "wait DRAIN" );
 					stream.once('drain', function(){ 
 						_debug && console.log( "Continue after drain happened." );
-						waitDrain = false;
-						writeOne()
+						if( waitDrain ) {
+							waitDrain = false;
+							writeOne();
+						} else {
+							// just the last write finishing don't retrigger.
+						}
 					});
 				}
 			}
