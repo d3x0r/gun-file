@@ -16,7 +16,7 @@ Gun.on('opt', function(ctx){
 	if(ctx.once){ return }
 	opt['file-name'] = String(opt['file-name'] || 'data.json');
 	opt['file-mask'] = String(opt['file-mask'] || 0666);
-	opt['file-pretty'] = String(opt['file-pretty'] || true);
+	opt['file-pretty'] = ('file-pretty' in opt)?opt['file-pretty']:true;
 	opt['file-delay'] = String(opt['file-delay'] || 100 );
 	var graph = ctx.graph, acks = {}, count = 0, to;
 	var disk = {};

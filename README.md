@@ -27,6 +27,7 @@ require( 'gun-file' );
 
 ### Changelog
 
-1.0.2 - update gun revision in package.json; added .npmignore 
+1.0.111 - fix getting file-pretty option.
+1.0.11 - update gun revision in package.json; added .npmignore 
 1.0.1 - update to JSON6 library rename of 'add' to 'write'
 1.0.0 - Initial release
