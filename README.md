@@ -6,7 +6,7 @@ A streaming file extension for Gun.
 
 ```
 	var gun = new Gun( { 'file-name' : 'yourData.json',  // default is 'data.json'
-                             'file-mask' : 0666, // default is 0666
+                             'file-mode' : 0666, // default is 0666
                              'file-pretty' : true, // default, if false, will write ugly/compressed json
                              'file-delay' : 100,  // default. control flush interval/delay default.
                            } );
@@ -26,6 +26,7 @@ require( 'gun-file' );
 
 
 ### Changelog
+1.0.113 - Handle multiple connections with same file better; prevent writing while another is reading.
 1.0.112 - add acks on puts; add method to attach gun-file to a gun datbase should it fail to load correct gun base.
 1.0.111 - fix getting file-pretty option.
 1.0.11 - update gun revision in package.json; added .npmignore 
