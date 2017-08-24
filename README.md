@@ -26,7 +26,7 @@ require( 'gun-file' );
 
 
 ### Changelog
-
+1.0.112 - add acks on puts; add method to attach gun-file to a gun datbase should it fail to load correct gun base.
 1.0.111 - fix getting file-pretty option.
 1.0.11 - update gun revision in package.json; added .npmignore 
 1.0.1 - update to JSON6 library rename of 'add' to 'write'

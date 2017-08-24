@@ -10,6 +10,16 @@ const _debug = false;
 const _json_debug = false;
 const _debug_write_time = false;
 
+const rel_ = Gun.val.rel._;  // '#'
+const val_ = Gun._.field;  // '.'
+const node_ = Gun.node._;  // '_'
+const state_ = Gun.state._;// '>';
+
+const ACK_ = '@';
+const SEQ_ = '#';
+
+exports.attach = function( Gun ) {
+
 Gun.on('opt', function(ctx){
 	this.to.next(ctx);
 	var opt = ctx.opt;
@@ -18,6 +28,7 @@ Gun.on('opt', function(ctx){
 	opt['file-mask'] = String(opt['file-mask'] || 0666);
 	opt['file-pretty'] = ('file-pretty' in opt)?opt['file-pretty']:true;
 	opt['file-delay'] = String(opt['file-delay'] || 100 );
+	var gun = ctx.gun;
 	var graph = ctx.graph, acks = {}, count = 0, to;
 	var disk = {};
 	var reading = false;
@@ -51,11 +62,15 @@ Gun.on('opt', function(ctx){
 		//console.log( "skip:", skip_put );
 		count += 1;
 		if(count >= (opt.batch || 10000)){
+			clearTimeout( to );
+			to = null;
 			return flush();
 		}
 		_debug && console.log( "put happened?", to );
 		if(to) clearTimeout( to );
 		to = setTimeout(flush, opt['file-delay'] );
+		gun.on('in', {[ACK_]: at[rel_], ok: 1});
+
 	});
 
 	ctx.on('get', function(at){
@@ -190,3 +205,6 @@ Gun.on('opt', function(ctx){
 
 	}
 });
+}
+
+exports.attach( Gun );
