@@ -32,7 +32,7 @@ Gun.on('opt', function(ctx){
 	var fileDelay = opt['file-delay'] || 100;
 	var gun = ctx.gun;
 	var graph = ctx.graph, acks = {}, count = 0, to;
-	var disk = {};
+	
 	//var reading = false;
 	var pending = [];
 	var pendingPut = [];
@@ -40,10 +40,9 @@ Gun.on('opt', function(ctx){
 	var pendPut = null;
 	var wantFlush = false;
 	var loaded = false;
-	var fileState = fileStates[fileName] || ( fileStates[fileName] = { reading:false, writing:false, flushPending : false } );
+	var fileState = fileStates[fileName] || ( fileStates[fileName] = { reading:false, writing:false, flushPending : false, disk : {} } );
 	
-	preloadDisk(opt, disk);
-
+	preloadDisk(opt, fileState.disk);
 
 	Gun.log.once(
 		'file-warning',
@@ -99,7 +98,7 @@ Gun.on('opt', function(ctx){
 			pending.push( {gun:gun, soul:soul, at:at, field:field} );
 		} else {
 			
-			data = disk[soul] || u;
+			data = fileState.disk[soul] || u;
 			if(data && field){
 				_debug && console.log( "get field?", field, data );
 				data = Gun.state.to(data, field);
@@ -121,11 +120,13 @@ Gun.on('opt', function(ctx){
 
 	var map = function(val, key, node, soul){
 		//_debug && console.log( "mapping graph?", soul );
-		disk[soul] = Gun.state.to(node, key, disk[soul]);
+		fileState.disk[soul] = Gun.state.to(node, key, fileState.disk[soul]);
 	}
 
 
 	function preloadDisk( opt, disk ) {
+		if( fileState.loaded )
+			return; // already have the disk image in memory
 		if( fileState.flushPending || fileState.writing ) {
 			_debug && console.log( "wait for pending flush on another connection?" );
 			setTimeout( ()=>preloadDisk( opt, disk ), fileDelay/3 );
@@ -211,7 +212,7 @@ Gun.on('opt', function(ctx){
 		var stream = fs.createWriteStream( fileName, {encoding:'utf8', mode:fileMode, flags:"w+"} );
 		var waitDrain = false;
 		stream.on('open', function () {
-			var keys = Object.keys( disk );
+			var keys = Object.keys( fileState.disk );
 			var n = 0;
 			if( _debug_write_time ) startWrite = Date.now();
 			_debug && console.log( new Date(), "stream write opened..." );
@@ -234,7 +235,7 @@ Gun.on('opt', function(ctx){
 					return;				        
 				}
 				var key = keys[n++];
-				var out = JSON.stringify( [key, disk[key]], null, pretty ) + (pretty?"\n":"");
+				var out = JSON.stringify( [key, fileState.disk[key]], null, pretty ) + (pretty?"\n":"");
 				if( !stream.write( out, 'utf8', function() {
 					if( !waitDrain ){ 
 						if( fileState.writing ) writeOne();  // otherwise already completed writing everything.
