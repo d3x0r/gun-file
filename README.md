@@ -26,6 +26,8 @@ require( 'gun-file' );
 
 
 ### Changelog
+1.0.115 - fix a couple more short timeout cross read/writes.
+1.0.114 - handle short timeouts better; flushes during flushes would lose the event to flush.
 1.0.113 - Handle multiple connections with same file better; prevent writing while another is reading.
 1.0.112 - add acks on puts; add method to attach gun-file to a gun datbase should it fail to load correct gun base.
 1.0.111 - fix getting file-pretty option.

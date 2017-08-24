@@ -94,15 +94,14 @@ Gun.on('opt', function(ctx){
 		var gun = at.gun, lex = at.get, soul, data, opt, u;
 		if(!lex || !(soul = lex[Gun._.soul])){ return }
 		var field = lex[val_];
-		if( fileState.reading || !loaded ) {
+		if( fileState.reading || fileState.flushPending || !loaded ) {
 			_debug && console.log( "Still reading... pushing request." );
 			pending.push( {gun:gun, soul:soul, at:at, field:field} );
 		} else {
 			
 			data = disk[soul] || u;
 			if(data && field){
-				console.log( "get field?", field, data );
-
+				_debug && console.log( "get field?", field, data );
 				data = Gun.state.to(data, field);
 			}
 			//else console.log( "not data or not field?", field );
@@ -113,7 +112,7 @@ Gun.on('opt', function(ctx){
 				skip_put = null;
 			}
 			else {
-				console.log( "didn't get dat for", soul );
+				_debug && console.log( "didn't get dat for", soul );
 				gun.on('in', {[ACK_]: at[SEQ_], err: "no data"});
 			}
 		}
@@ -127,7 +126,7 @@ Gun.on('opt', function(ctx){
 
 
 	function preloadDisk( opt, disk ) {
-		if( fileState.flushPending ) {
+		if( fileState.flushPending || fileState.writing ) {
 			_debug && console.log( "wait for pending flush on another connection?" );
 			setTimeout( ()=>preloadDisk( opt, disk ), fileDelay/3 );
 			return;
@@ -188,20 +187,26 @@ Gun.on('opt', function(ctx){
 		if( to )
 			clearTimeout(to);
 		to = null;
-
+		count = 0;
 		if(fileState.reading) {
-			_debug && console.log( "Still reading, don't write" ); 
+			_debug && console.log( "Still reading, don't write", fileState.flushPending ); 
 			to = setTimeout( flush, fileDelay/3 ); 
+			fileState.flushPending = true;
 			wantFlush = true; 
 			return; 
 		}
-		if(fileState.writing){ console.log( "Still flushing, don't flush" ); return }
+		if(fileState.writing){ 
+			to = setTimeout( flush, fileDelay );
+			_debug && console.log( "Still flushing, don't flush", fileState.flushPending ); 
+			fileState.flushPending = true;
+			return;
+		}
 		_debug && console.log( Date.now(), "DOING FLUSH", fileState.reading, fileState.writing, count );
 		
-		count = 0;
 		var ack = acks;
 		acks = {};
 		fileState.writing = true;
+		fileState.flushPending = false;
 		var pretty = filePretty?3:null;
 		var stream = fs.createWriteStream( fileName, {encoding:'utf8', mode:fileMode, flags:"w+"} );
 		var waitDrain = false;
@@ -213,7 +218,6 @@ Gun.on('opt', function(ctx){
 			function writeOne() {
 				if( n >= keys.length ) {
 					fileState.writing = false;
-					fileState.flushPending = false;
 					_debug_write_time && console.log( "Write to file:", Date.now() - startWrite );
 					_debug && console.log( "done; closing stream." );
 					stream.end();

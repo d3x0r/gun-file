@@ -1,6 +1,6 @@
 {
   "name": "gun-file",
-  "version": "1.0.113",
+  "version": "1.0.115",
   "description": "Streaming JSON file driver for Gun.",
   "main": "file.js",
   "scripts": {
