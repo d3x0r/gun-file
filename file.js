@@ -44,10 +44,10 @@ Gun.on('opt', function(ctx){
 	
 	preloadDisk(opt, fileState.disk);
 
-	Gun.log.once(
-		'file-warning',
-		'WARNING! This `gun-file` pre-alpha module for gun for testing only!'
-	);
+	//Gun.log.once(
+	//	'file-warning',
+	//	'WARNING! This `gun-file` pre-alpha module for gun for testing only!'
+	//);
 	
 	var skip_put;
 	function doPut( at ) {
