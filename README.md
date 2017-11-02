@@ -5,7 +5,7 @@ A streaming file extension for Gun.
 ## Controlling Options
 
 ```
-	var gun = new Gun( { 'file-name' : 'yourData.json',  // default is 'data.json'
+	var gun = new Gun( { 'file-name' : 'yourData.json',  // default is 'data.json6'
                              'file-mode' : 0666, // default is 0666
                              'file-pretty' : true, // default, if false, will write ugly/compressed json
                              'file-delay' : 100,  // default. control flush interval/delay default.
@@ -26,7 +26,7 @@ require( 'gun-file' );
 
 
 ### Changelog
-1.0.118 - 'in' events require posting the gun instance they are on in the message now.
+1.0.118 - 'in' events require posting the gun instance they are on in the message now.  Change default filename to data.json6.
 1.0.117 - remove alpha warning message.
 1.0.116 - add shared cache between instances using the same filename
 1.0.115 - fix a couple more short timeout cross read/writes.
