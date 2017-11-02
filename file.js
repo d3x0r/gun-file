@@ -26,7 +26,7 @@ Gun.on('opt', function(ctx){
 	this.to.next(ctx);
 	var opt = ctx.opt;
 	if(ctx.once){ return }
-	var fileName = String(opt['file-name'] || 'data.json');
+	var fileName = String(opt['file-name'] || 'data.json6');
 	var fileMode = opt['file-mode'] || 0666;
 	var filePretty = ('file-pretty' in opt)?opt['file-pretty']:true;
 	var fileDelay = opt['file-delay'] || 100;

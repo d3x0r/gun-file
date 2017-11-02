@@ -26,6 +26,7 @@ require( 'gun-file' );
 
 
 ### Changelog
+1.0.118 - 'in' events require posting the gun instance they are on in the message now.
 1.0.117 - remove alpha warning message.
 1.0.116 - add shared cache between instances using the same filename
 1.0.115 - fix a couple more short timeout cross read/writes.
