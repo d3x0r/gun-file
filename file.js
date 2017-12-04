@@ -1,9 +1,7 @@
-// This was written by the wonderful Forrest Tait
-// modified by Mark to be part of core for convenience
-// twas not designed for production use
-// only simple local development.
+// This was written by the wonderful d3x0r
+console.log( "module:",module, module.filename.includes( "node_modules/gun-file" ));
 
-const Gun = require('gun/gun');
+const Gun = require(module.filename.includes( "node_modules/gun-file" )?'../gun/gun':'gun/gun');
 const json6 = require( 'json-6' );
 const fs = require('fs');
 const _debug = false;
