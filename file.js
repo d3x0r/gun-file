@@ -26,7 +26,7 @@ Gun.on('opt', function(ctx){
 	this.to.next(ctx);
 	var opt = ctx.opt;
 	if(ctx.once){ return }
-	var fileName = String(opt['file-name'] || 'data.json');
+	var fileName = String(opt['file-name'] || 'data.json6');
 	var fileMode = opt['file-mode'] || 0666;
 	var filePretty = ('file-pretty' in opt)?opt['file-pretty']:true;
 	var fileDelay = opt['file-delay'] || 100;
@@ -80,7 +80,7 @@ Gun.on('opt', function(ctx){
 		if(to) clearTimeout( to );
 		to = setTimeout(flush, fileDelay );
 		fileState.flushPending = true;
-		gun.on('in', {[ACK_]: at[rel_], ok: 1});
+		gun.on('in', {[ACK_]: at[rel_], gun:gun, ok: 1});
 	}
 
 	ctx.on('put', function(at) {
@@ -106,13 +106,13 @@ Gun.on('opt', function(ctx){
 			//else console.log( "not data or not field?", field );
 			if( data ) {
 				skip_put = at[SEQ_];
-				gun.on('in', {[ACK_]: at[SEQ_], put: Gun.graph.node(data)});
+				gun.on('in', {[ACK_]: at[SEQ_], gun:gun, put: Gun.graph.node(data)});
 				//_debug && console.log( "getting data:", data );
 				skip_put = null;
 			}
 			else {
 				_debug && console.log( "didn't get dat for", soul );
-				gun.on('in', {[ACK_]: at[SEQ_], err: "no data"});
+				gun.on('in', {[ACK_]: at[SEQ_], gun:gun, err: "no data"});
 			}
 		}
 		//},11);
@@ -171,7 +171,7 @@ Gun.on('opt', function(ctx){
 					data = Gun.state.to(data, pend.field);
 				}
 				_debug && console.log( "Sending pending response...", pend.at[SEQ_] );
-				pend.gun.on('in', {'@': pend.at[SEQ_], put: Gun.graph.node(data)});
+				pend.gun.on('in', {[ACK_]: pend.at[SEQ_], gun:gun, put: Gun.graph.node(data)});
 				_debug && console.log( "Sent pending response...", pend.at[SEQ_] );
 			}
 			if( wantFlush ) {
@@ -226,7 +226,8 @@ Gun.on('opt', function(ctx){
 					count = 0;
 					Gun.obj.map(ack, function(yes, id){
 						ctx.on('in', {
-							'@': id,
+							[ACK_]: id,
+							gun: gun,
 							err: false,
 							ok: 1
 						});
