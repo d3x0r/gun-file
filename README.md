@@ -26,6 +26,7 @@ require( 'gun-file' );
 
 
 ### Changelog
+1.0.120 - test file path dyanamically to use common gun instead of potential private path...
 1.0.119 - update to gun 0.9
 1.0.118 - 'in' events require posting the gun instance they are on in the message now.  Change default filename to data.json6.
 1.0.117 - remove alpha warning message.
