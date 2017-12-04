@@ -1,6 +1,6 @@
 {
   "name": "gun-file",
-  "version": "1.0.117",
+  "version": "1.0.118",
   "description": "Streaming JSON file driver for Gun.",
   "main": "file.js",
   "scripts": {
@@ -20,5 +20,5 @@
   ],
   "author": "d3x0r",
   "license": "ISC",
-  "dependencies": { "json-6":"^0", "gun":"^0.8.0" }
+  "dependencies": { "json-6":"^0", "gun":"^0.9.0" }
 }
