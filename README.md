@@ -26,20 +26,20 @@ require( 'gun-file' );
 
 
 ### Changelog
-1.0.121 - generate 'in' on ctx instead of gun.  (Issue #2)
-1.0.120 - test file path dyanamically to use common gun instead of potential private path...
-1.0.119 - update to gun 0.9
-1.0.118 - 'in' events require posting the gun instance they are on in the message now.  Change default filename to data.json6.
-1.0.117 - remove alpha warning message.
-1.0.116 - add shared cache between instances using the same filename
-1.0.115 - fix a couple more short timeout cross read/writes.
-1.0.114 - handle short timeouts better; flushes during flushes would lose the event to flush.
-1.0.113 - Handle multiple connections with same file better; prevent writing while another is reading.
-1.0.112 - add acks on puts; add method to attach gun-file to a gun datbase should it fail to load correct gun base.
-1.0.111 - fix getting file-pretty option.
-1.0.11 - update gun revision in package.json; added .npmignore 
-1.0.1 - update to JSON6 library rename of 'add' to 'write'
-1.0.0 - Initial release
+- 1.0.121 - generate 'in' on ctx instead of gun.  (Issue #2)
+- 1.0.120 - test file path dyanamically to use common gun instead of potential private path...
+- 1.0.119 - update to gun 0.9
+- 1.0.118 - 'in' events require posting the gun instance they are on in the message now.  Change default filename to data.json6.
+- 1.0.117 - remove alpha warning message.
+- 1.0.116 - add shared cache between instances using the same filename
+- 1.0.115 - fix a couple more short timeout cross read/writes.
+- 1.0.114 - handle short timeouts better; flushes during flushes would lose the event to flush.
+- 1.0.113 - Handle multiple connections with same file better; prevent writing while another is reading.
+- 1.0.112 - add acks on puts; add method to attach gun-file to a gun datbase should it fail to load correct gun base.
+- 1.0.111 - fix getting file-pretty option.
+- 1.0.11 - update gun revision in package.json; added .npmignore 
+- 1.0.1 - update to JSON6 library rename of 'add' to 'write'
+- 1.0.0 - Initial release
 
 
 
