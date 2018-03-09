@@ -26,6 +26,7 @@ require( 'gun-file' );
 
 
 ### Changelog
+- 1.0.123 - update to gun latest API ( deleted internal value) 
 - 1.0.121 - generate 'in' on ctx instead of gun.  (Issue #2)
 - 1.0.120 - test file path dyanamically to use common gun instead of potential private path...
 - 1.0.119 - update to gun 0.9

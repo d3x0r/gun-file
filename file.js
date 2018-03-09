@@ -9,7 +9,7 @@ const _json_debug = false;
 const _debug_write_time = false;
 
 const rel_ = Gun.val.rel._;  // '#'
-const val_ = Gun._.field;  // '.'
+const val_ = Gun.obj.has._;  // '.'
 const node_ = Gun.node._;  // '_'
 const state_ = Gun.state._;// '>';
 
