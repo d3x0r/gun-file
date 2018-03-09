@@ -12,7 +12,7 @@ const rel_ = Gun.val.rel._;  // '#'
 const val_ = Gun.obj.has._;  // '.'
 const node_ = Gun.node._;  // '_'
 const state_ = Gun.state._;// '>';
-const soul_ = Gun.node.soul._;
+const soul_ = Gun.node.soul._; // '#'
 const ACK_ = '@';
 const SEQ_ = '#';
 
