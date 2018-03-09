@@ -7,8 +7,8 @@
     "test": "node test.js"
   },
   "repository": {
-        "type": "git",
-        "url": "https://github.com/d3x0r/gun-file"
+    "type": "git",
+    "url": "https://github.com/d3x0r/gun-file"
   },
   "keywords": [
     "gun",
@@ -20,5 +20,8 @@
   ],
   "author": "d3x0r",
   "license": "ISC",
-  "dependencies": { "json-6":"^0", "gun":"^0.9.0" }
+  "dependencies": {
+    "gun": "^0.9.96",
+    "json-6": "^0"
+  }
 }

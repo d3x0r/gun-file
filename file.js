@@ -12,7 +12,7 @@ const rel_ = Gun.val.rel._;  // '#'
 const val_ = Gun.obj.has._;  // '.'
 const node_ = Gun.node._;  // '_'
 const state_ = Gun.state._;// '>';
-
+const soul_ = Gun.node.soul._;
 const ACK_ = '@';
 const SEQ_ = '#';
 
@@ -89,7 +89,7 @@ Gun.on('opt', function(ctx){
 	ctx.on('get', function(at){
 		this.to.next(at);
 		var gun = at.gun, lex = at.get, soul, data, opt, u;
-		if(!lex || !(soul = lex[Gun._.soul])){ return }
+		if(!lex || !(soul = lex[soul_])){ return }
 		var field = lex[val_];
 		if( fileState.reading || fileState.flushPending || !loaded ) {
 			_debug && console.log( "Still reading... pushing request." );
