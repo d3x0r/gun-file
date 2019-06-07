@@ -21,7 +21,7 @@
   "author": "d3x0r",
   "license": "ISC",
   "dependencies": {
-    "gun": "^0.9.96",
+    "gun": "^0.2019.416",
     "json-6": "^0"
   }
 }

@@ -1,5 +1,5 @@
 // This was written by the wonderful d3x0r
-console.log( "module:",module, module.filename.includes( "node_modules/gun-file" ));
+//console.log( "module:",module, module.filename.includes( "node_modules/gun-file" ));
 
 const Gun = require(module.filename.includes( "node_modules/gun-file" )?'../gun/gun':'gun/gun');
 const json6 = require( 'json-6' );
